@@ -4,9 +4,123 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="math.js"></script>
     <title>Document</title>
 </head>
 <body>
-    <h1>TESTEE</h1>
+    <script>
+    
+    const a = math.matrix([[3, 1, 0], [2, 0, 2], [1, 0, 0], [0, 1, 0], [0, 0, 1]],);
+    const b = math.matrix([18, 4, 12]);
+    const funcaoObjetivo = math.matrix([-3, -5, 0, 0, 0]);
+    let base, baseInversa, naoBase, cbt, cnt, indicesBase, indicesnaoBase;
+    indicesBase = [2, 3, 4];
+    indicesnaoBase = [0, 1];
+
+    const mudaIndiceBase = (indiceSaiBase, indiceEntraBase) => {
+        //console.log(indiceSaiBase, indiceEntraBase, indicesBase[indiceSaiBase], indicesnaoBase[indiceEntraBase]);
+        const aux = indicesBase[indiceSaiBase];
+        indicesBase[indiceSaiBase] = indiceEntraBase;
+        indicesnaoBase[indiceEntraBase] = aux;
+        //console.log(indicesBase, indicesnaoBase, aux);
+    }
+
+    const setBase = () => {
+        base = math.subset(a, math.index(indicesBase, math.range(0, 3)));
+        naoBase = math.subset(a, math.index(indicesnaoBase, math.range(0, 3)));
+        baseInversa = math.inv(base);
+        cbt = math.subset(funcaoObjetivo, math.index(indicesBase));
+        cnt = math.subset(funcaoObjetivo, math.index(indicesnaoBase));
+        //console.log("base , nao base, cbt, cnt", base, naoBase, cbt, cnt);
+    } 
+
+    const simplex = () => {
+        const matrizZero = math.zeros(3);
+        let i = 1
+
+        while (true) {
+            console.log(`iteracao ${i}`)
+            const cnj = [];
+            let xbAux, lambdaTAux, yAux;
+            const xb = [];
+            const lambdaT = [];
+            const ank = [];
+            const y = [];
+            setBase();
+    
+            //Passo 1
+            for (let index = 0; index < 3; index++) {
+                xbAux = math.multiply(b, math.column(baseInversa, index));
+                xb.push(xbAux.get([0]));
+            }
+            console.log("xb", xb, math.column(baseInversa, 1), baseInversa);
+            
+            //Passo 2
+            //i)
+            for (let index = 0; index < 3; index++) {
+                lambdaTAux = math.multiply(math.row(baseInversa, index), cbt);
+                lambdaT.push(lambdaTAux.get([0]));
+            }
+            console.log("LambdaT" , lambdaT);
+    
+            //ii)
+            math.forEach(cnt, (element, i) => {
+                console.log(element, i);
+                const index = i[0];
+                const anjAux = math.matrix(math.row(naoBase, index));
+                const anj = [];
+                math.forEach(anjAux, (element1) => {
+                    anj.push(element1);
+                });
+                cnj.push(math.subtract(element, math.multiply(lambdaT, anj)));
+                console.log(cnj);
+            });
+    
+            //iii)
+            const cnk = math.min(cnj);
+            const indiceK = cnj.indexOf(cnk); //Indice que vai se juntar a base
+            console.log("indiceK", indiceK);
+    
+            //Passo 3
+            if (cnk >= 0)
+            {   
+                console.log(xb)
+                console.log("ACABOU");
+                return;
+            }
+    
+            //Passo 4
+            const ankAux = math.matrix(math.row(naoBase, indiceK));
+            math.forEach(ankAux, (element) => {
+                ank.push(element);
+            });
+            //y = math.multiply(baseInversa, ank);
+            for (let index = 0; index < 3; index++) {
+                yAux = math.multiply(ank, math.column(baseInversa, index));
+                y.push(yAux.get([0]));
+            }
+            console.log("y, ank", y, ank)
+    
+            //Passo5
+            //console.log(math.smallerEq(y, matrizZero));
+            
+            const epsilon = [];
+            math.forEach(xb, (element, i) => {
+                const index = i[0];
+                //console.log(element, i, y, math.subset(y, math.index(index)));
+                const calculo = element/math.subset(y, math.index(index));
+                epsilon.push(calculo);
+            });
+            const menorEpsilon = math.min(epsilon);
+            const indiceY = epsilon.indexOf(menorEpsilon); //Indice que sai da base
+            console.log(indiceY);
+            mudaIndiceBase(indiceY, indiceK);
+            i++;
+        }
+    }
+
+    simplex();
+
+    </script>
 </body>
 </html>
