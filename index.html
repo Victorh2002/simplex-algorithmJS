@@ -13,9 +13,93 @@
     const a = math.matrix([[3, 1, 0], [2, 0, 2], [1, 0, 0], [0, 1, 0], [0, 0, 1]],);
     const b = math.matrix([18, 4, 12]);
     const funcaoObjetivo = math.matrix([-3, -5, 0, 0, 0]);
-    let base, baseInversa, naoBase, cbt, cnt, indicesBase, indicesnaoBase;
+    let base, baseInversa, naoBase, cbt, cnt, indicesBase, indicesnaoBase, quantidadeColunas, quantidadeLinhas;
     indicesBase = [2, 3, 4];
     indicesnaoBase = [0, 1];
+
+    const gerarTableMatriz = () => {
+        const table = document.createElement("table");
+        table.setAttribute("id", "tableMatriz");
+        const thead = document.createElement("thead");
+        const tbody = document.createElement("tbody");
+        const colunas = document.getElementsByName("colunas")[0];
+        quantidadeColunas = colunas.value;
+        const linhas = document.getElementsByName("linhas")[0];
+        quantidadeLinhas = linhas.value;
+
+        let row;
+        
+        row = document.createElement("tr");
+        for (let i = 0; i < quantidadeColunas; i++) {
+            const cell = document.createElement("td");
+            const cellText = document.createTextNode(`x${i+1}`);
+            cell.appendChild(cellText);
+            row.appendChild(cell);
+            thead.appendChild(row);
+        }
+
+        for (let i = 0; i < quantidadeLinhas; i++) {
+            row = document.createElement("tr");
+            row.setAttribute("id", "linhaMatriz");
+            
+            for (let j = 0; j < quantidadeColunas; j++) {
+                const cell = document.createElement("td");
+                const input = document.createElement("input");
+                input.setAttribute("class", "campos");
+                input.setAttribute("name", "campos");
+                cell.appendChild(input);
+                row.appendChild(cell);
+            }
+            tbody.appendChild(row);
+        }
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        document.body.appendChild(table);
+
+        gerarTableBase();
+        const button = document.createElement("input");
+        button.setAttribute("type", "button");
+        button.setAttribute("value", "Calcular o Simplex");
+        button.setAttribute("onclick", "getValores()");
+        document.body.appendChild(button);
+    }
+
+    const gerarTableBase = () => {
+        const br = document.createElement("br");
+        const table = document.createElement("table");
+        table.setAttribute("id", "tableBase");
+        const row = document.createElement("tr");
+        row.setAttribute("id", "linhaBase");
+            for (let i = 0; i < quantidadeLinhas; i++) {
+                const cell = document.createElement("td");
+                const input = document.createElement("input");
+                input.setAttribute("class", "campos");
+                input.setAttribute("name", "campos");
+                cell.appendChild(input);
+                row.appendChild(cell);
+            }
+        table.appendChild(row);
+        document.body.appendChild(br);
+        document.body.appendChild(table);
+    }
+
+    const getValores = () => {
+        const dadosTable = document.getElementsByName("campos");
+        const rows = document.querySelectorAll('#linhaMatriz');
+        const valoresTable = [];
+
+        rows.forEach(row => {
+            const valoresRow = [];
+            const inputs = row.querySelectorAll('input');
+            inputs.forEach(input => {
+                valoresRow.push(input.value);
+            })
+            valoresTable.push(valoresRow);
+        })
+
+        console.log(valoresTable);
+    }
 
     const mudaIndiceBase = (indiceSaiBase, indiceEntraBase) => {
         //console.log(indiceSaiBase, indiceEntraBase, indicesBase[indiceSaiBase], indicesnaoBase[indiceEntraBase]);
@@ -49,16 +133,16 @@
             setBase();
     
             //Passo 1
-            for (let index = 0; index < 3; index++) {
-                xbAux = math.multiply(b, math.column(baseInversa, index));
+            for (let i = 0; i < 3; i++) {
+                xbAux = math.multiply(b, math.column(baseInversa, i));
                 xb.push(xbAux.get([0]));
             }
             console.log("xb", xb, math.column(baseInversa, 1), baseInversa);
             
             //Passo 2
             //i)
-            for (let index = 0; index < 3; index++) {
-                lambdaTAux = math.multiply(math.row(baseInversa, index), cbt);
+            for (let i = 0; i < 3; i++) {
+                lambdaTAux = math.multiply(math.row(baseInversa, i), cbt);
                 lambdaT.push(lambdaTAux.get([0]));
             }
             console.log("LambdaT" , lambdaT);
@@ -84,7 +168,7 @@
             //Passo 3
             if (cnk >= 0)
             {   
-                console.log(xb)
+                console.log(xb);
                 console.log("ACABOU");
                 return;
             }
@@ -94,15 +178,27 @@
             math.forEach(ankAux, (element) => {
                 ank.push(element);
             });
-            //y = math.multiply(baseInversa, ank);
-            for (let index = 0; index < 3; index++) {
-                yAux = math.multiply(ank, math.column(baseInversa, index));
+            for (let i = 0; i < 3; i++) {
+                yAux = math.multiply(ank, math.column(baseInversa, i));
                 y.push(yAux.get([0]));
             }
             console.log("y, ank", y, ank)
     
             //Passo5
             //console.log(math.smallerEq(y, matrizZero));
+            const minY = math.smallerEq(y, matrizZero);
+            
+            var contador = 0;
+            math.forEach(minY, (element) => {
+                if(element === true) {
+                    contador += 1;
+                }
+            });
+            console.log("contador", contador, quantidadeLinhas);
+            if(contador === quantidadeLinhas) {
+                console.log("Não existe solução finita");
+                return;
+            }
             
             const epsilon = [];
             math.forEach(xb, (element, i) => {
@@ -119,8 +215,17 @@
         }
     }
 
-    simplex();
+    //simplex();
 
     </script>
+
+    <label for="colunas">Quantidade de Variáveis</label>
+    <br>
+    <input type="text" name="colunas"/>
+    <br>    
+    <label for="linhas">Quantidade de Restrições</label>
+    <br>
+    <input type="text" name="linhas"/>
+    <input type="button" value="Gerar Matriz" onclick="gerarTableMatriz()">
 </body>
 </html>
