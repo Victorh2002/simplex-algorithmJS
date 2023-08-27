@@ -4,34 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="styles.css">
-    <script src="math.js"></script>
+    <script src="https://unpkg.com/mathjs@11.10.0/lib/browser/math.js"></script>
     <title>Document</title>
 </head>
 <body>
     <script>
     
-    /*const a = math.matrix([[3, 1, 0], [2, 0, 2], [1, 0, 0], [0, 1, 0], [0, 0, 1]],);
-    const b = math.matrix([18, 4, 12]);
-    const funcaoObjetivo = math.matrix([-3, -5, 0, 0, 0]);
-    let base, baseInversa, naoBase, cbt, cnt, indicesBase, indicesnaoBase, quantidadeColunas, quantidadeLinhas;
-    indicesBase = [2, 3, 4];
-    indicesnaoBase = [0, 1];*/
-    const a = math.matrix([[1, 7, 3], [1, 5, 5], [1, 3, 10], [1, 2, 15], [1, 0, 0], [0, 1, 0], [0, 0, 1]],);
-    const b = math.matrix([15, 120, 100]);
-    const funcaoObjetivo = math.matrix([-4, -5, -9, -11, 0, 0, 0]);
-    let base, baseInversa, naoBase, cbt, cnt, indicesBase, indicesnaoBase, quantidadeColunas, quantidadeLinhas;
-    indicesBase = [4, 5, 6];
-    indicesnaoBase = [0, 1, 2, 3];
+    let a;
+    let b;
+    let funcaoObjetivo;
+    let indicesBase;
+    let indicesnaoBase = [];
+    let base, baseInversa, naoBase, cbt, cnt, quantidadeColunas, quantidadeLinhas;
 
     const gerarTableMatriz = () => {
+        const div = document.getElementById("tableMatrizRestricoes");
+        const divTexto = document.getElementById("labelMatriz");
+        const texto = document.createTextNode("Matriz das Restrições:");
         const table = document.createElement("table");
-        table.setAttribute("id", "tableMatriz");
+        table.setAttribute("id", "tableMatrizA");
         const thead = document.createElement("thead");
         const tbody = document.createElement("tbody");
         const colunas = document.getElementsByName("colunas")[0];
         quantidadeColunas = colunas.value;
         const linhas = document.getElementsByName("linhas")[0];
         quantidadeLinhas = linhas.value;
+
+        div.innerHTML = "";
+        divTexto.innerHTML = "";
+
+        divTexto.appendChild(texto);
 
         let row;
         
@@ -46,7 +48,7 @@
 
         for (let i = 0; i < quantidadeLinhas; i++) {
             row = document.createElement("tr");
-            row.setAttribute("id", "linhaMatriz");
+            row.setAttribute("id", "linhaMatrizA");
             
             for (let j = 0; j < quantidadeColunas; j++) {
                 const cell = document.createElement("td");
@@ -61,21 +63,91 @@
 
         table.appendChild(thead);
         table.appendChild(tbody);
-        document.body.appendChild(table);
+        div.appendChild(table);
 
+        gerarTableMatrizB();
+        gerarTableFuncaoObjetivo();
         gerarTableBase();
+
+        const divButton = document.getElementById("button");
+        divButton.innerHTML = "";
         const button = document.createElement("input");
         button.setAttribute("type", "button");
         button.setAttribute("value", "Calcular o Simplex");
         button.setAttribute("onclick", "getValores()");
-        document.body.appendChild(button);
+        divButton.appendChild(button);
+    }
+
+    const gerarTableMatrizB = () => {
+        const div = document.getElementById("tableMatrizRestricoes");
+        const table = document.createElement("table");
+        table.setAttribute("id", "tableMatrizB");
+        const thead = document.createElement("thead");
+        const tbody = document.createElement("tbody");
+
+        row = document.createElement("tr");
+        const cell = document.createElement("td");
+        const cellText = document.createTextNode("b");
+        cell.appendChild(cellText);
+        row.appendChild(cell);
+        thead.appendChild(row);
+        
+        for (let i = 0; i < quantidadeLinhas; i++) {
+            row = document.createElement("tr");
+            row.setAttribute("id", "linhaMatrizB");
+            const cell = document.createElement("td");
+            const input = document.createElement("input");
+            input.setAttribute("class", "campos");
+            input.setAttribute("name", "campos");
+
+            cell.appendChild(input);
+            row.appendChild(cell);
+            tbody.appendChild(row);
+        }
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        div.appendChild(table);
+    }
+
+    const gerarTableFuncaoObjetivo = () => {
+        const div = document.getElementById("tableMatrizFuncObjetivo");
+        const texto = document.createTextNode("Função Objetivo:");
+        const br = document.createElement("br");
+        const table = document.createElement("table");
+        table.setAttribute("id", "tableFuncObjetivo");
+        row = document.createElement("tr");
+
+        div.innerHTML = "";
+
+        div.appendChild(texto);
+
+        row.setAttribute("id", "linhaFuncObjetivo");
+            for (let i = 0; i < quantidadeColunas; i++) {
+                const cell = document.createElement("td");
+                const input = document.createElement("input");
+                input.setAttribute("class", "campos");
+                input.setAttribute("name", "campos");
+                cell.appendChild(input);
+                row.appendChild(cell);
+            }
+        table.appendChild(row);
+        div.appendChild(br);
+        div.appendChild(table);
     }
 
     const gerarTableBase = () => {
+        const div = document.getElementById("tableMatrizBase");
+        const texto = document.createTextNode("Base:");
         const br = document.createElement("br");
         const table = document.createElement("table");
         table.setAttribute("id", "tableBase");
-        const row = document.createElement("tr");
+        row = document.createElement("tr");
+
+        div.innerHTML = "";
+
+        div.appendChild(texto);
+
         row.setAttribute("id", "linhaBase");
             for (let i = 0; i < quantidadeLinhas; i++) {
                 const cell = document.createElement("td");
@@ -86,14 +158,19 @@
                 row.appendChild(cell);
             }
         table.appendChild(row);
-        document.body.appendChild(br);
-        document.body.appendChild(table);
+        div.appendChild(br);
+        div.appendChild(table);
     }
 
     const getValores = () => {
         const dadosTable = document.getElementsByName("campos");
-        const rows = document.querySelectorAll('#linhaMatriz');
-        const valoresTable = [];
+        let rows;
+        const valoresTableA = [];
+        const valoresTableB = [];
+        const valoresTableFuncObjectivo = [];
+        const valoresTableBase = [];
+
+        rows = document.querySelectorAll('#linhaMatrizA');
 
         rows.forEach(row => {
             const valoresRow = [];
@@ -101,67 +178,117 @@
             inputs.forEach(input => {
                 valoresRow.push(input.value);
             })
-            valoresTable.push(valoresRow);
-        })
+            valoresTableA.push(valoresRow);
+        });
 
-        console.log(valoresTable);
+        rows = document.querySelectorAll('#linhaMatrizB');
+
+        rows.forEach(row => {
+            const valoresRow = [];
+            const inputs = row.querySelectorAll('input');
+            inputs.forEach(input => {
+                valoresRow.push(input.value);
+            })
+            valoresTableB.push(valoresRow);
+        });
+
+        rows = document.querySelectorAll('#linhaFuncObjetivo');
+
+        rows.forEach(row => {
+            const valoresRow = [];
+            const inputs = row.querySelectorAll('input');
+            inputs.forEach(input => {
+                valoresRow.push(input.value);
+            })
+            valoresTableFuncObjectivo.push(valoresRow);
+        });
+
+        rows = document.querySelectorAll('#linhaBase');
+
+        rows.forEach(row => {
+            const valoresRow = [];
+            const inputs = row.querySelectorAll('input');
+            inputs.forEach(input => {
+                valoresRow.push(input.value-1);
+            })
+            valoresTableBase.push(valoresRow);
+        });
+
+        a = math.matrix(valoresTableA);
+        b = math.matrix(valoresTableB);
+        funcaoObjetivo = valoresTableFuncObjectivo[0];
+        indicesBase = valoresTableBase[0]
+        console.log(a, b, valoresTableFuncObjectivo, indicesBase);
+        indicesnaoBase = [];
+        criaNaoBase();
+        simplex();
+    }
+
+    const criaNaoBase = () => {
+        let contador;
+        for (let i = 0; i < quantidadeColunas; i++) {
+            contador = 0;
+            indicesBase.forEach((element) => {
+                if(element == i){
+                    contador = 1;
+                    console.log(element, contador);
+                }
+            });
+            if (contador === 0) {
+                indicesnaoBase.push(i);
+            }
+        }
     }
 
     const mudaIndiceBase = (indiceSaiBase, indiceEntraBase) => {
-        //console.log(indiceSaiBase, indiceEntraBase, indicesBase[indiceSaiBase], indicesnaoBase[indiceEntraBase]);
         const aux = indicesBase[indiceSaiBase];
         indicesBase[indiceSaiBase] = indiceEntraBase;
         indicesnaoBase[indiceEntraBase] = aux;
-        //console.log(indicesBase, indicesnaoBase, aux);
     }
 
     const setBase = () => {
-        base = math.subset(a, math.index(indicesBase, math.range(0, 3)));
-        naoBase = math.subset(a, math.index(indicesnaoBase, math.range(0, 3)));
+        const tamanhoBase = math.size(indicesBase);
+        console.log(math.index(math.range(0, tamanhoBase[0]), indicesBase));
+        base = math.subset(a, math.index(math.range(0, tamanhoBase[0]), indicesBase));
+        naoBase = math.subset(a, math.index(math.range(0, tamanhoBase[0]), indicesnaoBase));
         baseInversa = math.inv(base);
         cbt = math.subset(funcaoObjetivo, math.index(indicesBase));
         cnt = math.subset(funcaoObjetivo, math.index(indicesnaoBase));
-        //console.log("base , nao base, cbt, cnt", base, naoBase, cbt, cnt);
+        console.log("base , nao base, cbt, cnt", base, naoBase, cbt, cnt);
     } 
 
     const simplex = () => {
-        const matrizZero = math.zeros(3);
-        let i = 1
-
+        const matrizZero = math.zeros(math.size(indicesBase));
+        let i = 1;
+        let xb, lambdaT
+        	
         while (true) {
             console.log(`iteracao ${i}`)
             const cnj = [];
-            let xbAux, lambdaTAux, yAux;
-            const xb = [];
-            const lambdaT = [];
+            let yAux;
             const ank = [];
             const y = [];
             setBase();
     
             //Passo 1
-            for (let i = 0; i < 3; i++) {
-                xbAux = math.multiply(b, math.column(baseInversa, i));
-                xb.push(xbAux.get([0]));
-            }
+            xb = math.multiply(baseInversa, b);
             console.log("xb", xb, math.column(baseInversa, 1), baseInversa);
             
             //Passo 2
             //i)
-            for (let i = 0; i < 3; i++) {
-                lambdaTAux = math.multiply(math.row(baseInversa, i), cbt);
-                lambdaT.push(lambdaTAux.get([0]));
-            }
+            lambdaT = math.multiply(cbt, baseInversa);
             console.log("LambdaT" , lambdaT);
     
             //ii)
             math.forEach(cnt, (element, i) => {
                 console.log(element, i);
                 const index = i[0];
-                const anjAux = math.matrix(math.row(naoBase, index));
+                const anjAux = math.matrix(math.column(naoBase, index));
                 const anj = [];
                 math.forEach(anjAux, (element1) => {
                     anj.push(element1);
                 });
+                console.log(anj);
                 cnj.push(math.subtract(element, math.multiply(lambdaT, anj)));
                 console.log(cnj);
             });
@@ -175,24 +302,22 @@
             if (cnk >= 0)
             {   
                 console.log(xb);
+                mostraResultado(xb);
                 console.log("ACABOU");
                 return;
             }
     
             //Passo 4
-            const ankAux = math.matrix(math.row(naoBase, indiceK));
-            math.forEach(ankAux, (element) => {
-                ank.push(element);
+            const ankAux = math.matrix(math.column(naoBase, indiceK));
+            console.log("ankAux", ankAux);
+            yAux = math.multiply(baseInversa, ankAux);
+            math.forEach(yAux, (element) => {
+                y.push(element);
             });
-            for (let i = 0; i < 3; i++) {
-                yAux = math.multiply(ank, math.column(baseInversa, i));
-                y.push(yAux.get([0]));
-            }
-            console.log("y, ank", y, ank)
+            console.log("y", y);
     
             //Passo5
-            //console.log(math.smallerEq(y, matrizZero));
-            const minY = math.smallerEq(y, matrizZero);
+            const minY = math.smallerEq(y, matrizZero); 
             
             var contador = 0;
             math.forEach(minY, (element) => {
@@ -209,8 +334,9 @@
             const epsilon = [];
             math.forEach(xb, (element, i) => {
                 const index = i[0];
-                //console.log(element, i, y, math.subset(y, math.index(index)));
-                const calculo = element/math.subset(y, math.index(index));
+                console.log(element, i, y);
+                const calculo = math.divide(element, y[index]);
+                console.log(calculo);
                 if (calculo >= 1) {
                     epsilon.push(calculo);
                 }
@@ -226,7 +352,52 @@
         }
     }
 
-    simplex();
+    const mostraResultado = (xb) => {
+        const div = document.getElementById("tableMatrizResultado");
+        const br = document.createElement("br");
+        const table = document.createElement("table");
+        table.setAttribute("id", "tableResultado");
+        const tbody = document.createElement("tbody");
+        const texto = document.createTextNode("O resultado ótimo é:");
+        const x = new Array(quantidadeColunas);
+        for (let i = 0; i < quantidadeColunas; i++) {
+            x[i] = 0;
+        }
+
+        math.forEach(xb, (element, i) => {
+            console.log(i);
+            x[indicesBase[i[0]]] = element;
+        });
+
+        div.innerHTML = "";
+        
+        row = document.createElement("tr");
+        for (let i = 0; i < quantidadeColunas; i++) {
+            const cell = document.createElement("td");
+            cell.setAttribute("id", "celula");
+            const cellText = document.createTextNode(`x${i+1}`);
+            cell.appendChild(cellText);
+            row.appendChild(cell);
+            tbody.appendChild(row);
+        }
+
+        table.appendChild(tbody);
+
+        row = document.createElement("tr");
+        for (let i = 0; i < quantidadeColunas; i++) {
+            const cell = document.createElement("td");
+            cell.setAttribute("id", "celula");
+            const cellText = document.createTextNode(`${x[i]}`);
+            cell.appendChild(cellText);
+            row.appendChild(cell);
+            tbody.appendChild(row);
+        }
+
+        table.appendChild(tbody);
+        div.appendChild(br);
+        div.appendChild(texto);
+        div.appendChild(table);
+    }
 
     </script>
 
@@ -237,6 +408,15 @@
     <label for="linhas">Quantidade de Restrições</label>
     <br>
     <input type="text" name="linhas"/>
+    <br> <br>
     <input type="button" value="Gerar Matriz" onclick="gerarTableMatriz()">
+    <br> <br>
+    <div id="labelMatriz"></div>   
+    <div id="tableMatrizRestricoes"></div>
+    <div id="tableMatrizFuncObjetivo"></div>
+    <div id="tableMatrizBase"></div>
+    <br>
+    <div id="button"></div>
+    <div id="tableMatrizResultado"></div>
 </body>
 </html>

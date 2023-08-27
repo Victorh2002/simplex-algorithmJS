@@ -1,3 +1,22 @@
 .campos {
     width: 30px;
 }
+
+#tableMatrizRestricoes{
+    display: flex;
+}
+
+#tableMatrizResultado {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+}
+
+#tableMatrizA, #tableMatrizB, #tableMatrizFuncObjetivo, #tableBase {
+    border: 0;
+}  
+
+#tableResultado, #celula {
+    border: 1px black solid;
+    border-collapse: collapse;
+}
